@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Who Ate the Zoo Director's Lunch?</title>
+<link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & BASE STYLES (100% Offline, Zero External Dependencies)
+       ========================================================================== */
+    :root {
+      --bg-beige: #FAF6F0;
+      --surface-cream: #FFFDF9;
+      --board-bg: #F2EBD9;
+      --board-border: #E0D5BE;
+      --sage: #7DA38B;
+      --sage-dark: #5E836C;
+      --sage-light: #EAF3ED;
+      --terracotta: #D98A6C;
+      --terracotta-dark: #B9684A;
+      --terracotta-light: #FBECE6;
+      --sky: #7BA4BE;
+      --sky-dark: #57829D;
+      --sky-light: #E9F2F7;
+      --gold: #E5B95C;
+      --gold-dark: #B88B2E;
+      --gold-light: #FDF5E2;
+      --text-main: #353430;
+      --text-muted: #6C675E;
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-soft: 0 8px 24px rgba(53, 52, 48, 0.07);
+      --shadow-card: 0 5px 14px rgba(53, 52, 48, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-beige);
+      background-image:
+        linear-gradient(to right, rgba(123, 164, 190, 0.17) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(123, 164, 190, 0.17) 1px, transparent 1px);
+      background-size: 26px 26px;
+      min-height: 100vh;
+      line-height: 1.45;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+      color: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       2. APP CONTAINER & TOP HEADER BAR
+       ========================================================================== */
+    .app-shell {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .app-shell {
+        padding: 24px;
+      }
+    }
+
+    .top-header {
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      border-radius: var(--radius-xl);
+      padding: 14px 20px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 15px;
+      background: var(--terracotta-light);
+      border: 2px solid rgba(217, 138, 108, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--terracotta-dark);
+      margin-top: 2px;
+    }
+
+    /* Progress Pills */
+    .progress-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-beige);
+      border: 2px solid var(--board-border);
+      border-radius: 15px;
+      padding: 6px 12px;
+    }
+
+    .progress-dot {
+      width: 27px;
+      height: 27px;
+      border-radius: 50%;
+      font-size: 0.78rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      color: var(--text-muted);
+      transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .progress-dot.done {
+      background: var(--sage);
+      border-color: var(--sage-dark);
+      color: #fff;
+    }
+
+    .progress-dot.active {
+      background: var(--terracotta);
+      border-color: var(--terracotta-dark);
+      color: #fff;
+      transform: scale(1.12);
+    }
+
+    .progress-star {
+      width: 29px;
+      height: 29px;
+      border-radius: 50%;
+      font-size: 0.92rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      color: var(--text-muted);
+      transition: all 0.25s ease;
+    }
+
+    .progress-star.ready {
+      background: var(--sage-light);
+      border-color: var(--sage);
+      color: var(--sage-dark);
+      animation: softPulseSage 1.5s infinite;
+    }
+
+    .progress-star.won {
+      background: var(--gold);
+      border-color: var(--gold-dark);
+      color: #fff;
+      transform: scale(1.14);
+    }
+
+    /* Header Buttons */
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hdr-btn {
+      min-height: 42px;
+      padding: 8px 14px;
+      border-radius: 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 2px solid var(--board-border);
+      background: var(--surface-cream);
+      transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .hdr-btn:hover {
+      background: var(--bg-beige);
+      transform: translateY(-1px);
+    }
+
+    .hdr-btn:active {
+      transform: translateY(1px);
+    }
+
+    .hdr-btn-notebook {
+      background: var(--gold-light);
+      border-color: var(--gold);
+      color: #5e4612;
+    }
+
+    .hdr-btn-notebook:hover {
+      background: #faeccb;
+    }
+
+    /* ==========================================================================
+       3. TWO-COLUMN RESPONSIVE WORKSPACE
+       ========================================================================== */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (min-width: 960px) {
+      .workspace {
+        grid-template-columns: 1.04fr 0.96fr;
+      }
+    }
+
+    /* Left Column: Suspect Board */
+    .suspects-panel {
+      background: var(--board-bg);
+      border: 2px solid var(--board-border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    @media (min-width: 640px) {
+      .suspects-panel {
+        padding: 22px;
+      }
+    }
+
+    .board-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .board-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--terracotta);
+      display: inline-block;
+    }
+
+    .board-subtitle {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-pill {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--surface-cream);
+      border: 1.5px solid var(--board-border);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .status-pill.closed {
+      background: var(--sage-light);
+      border-color: var(--sage);
+      color: var(--sage-dark);
+    }
+
+    .board-feedback {
+      background: var(--terracotta-light);
+      border: 2px solid rgba(217, 138, 108, 0.6);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #6b2d20;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      animation: popIn 0.25s ease;
+    }
+
+    .suspects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding-top: 6px;
+    }
+
+    @media (min-width: 540px) {
+      .suspects-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+    }
+
+    /* Polaroid Suspect Card */
+    .polaroid {
+      position: relative;
+      background: var(--surface-cream);
+      border: 2px solid #e6dcc8;
+      border-radius: var(--radius-lg);
+      padding: 10px 10px 12px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.25s ease, filter 0.25s ease;
+      cursor: default;
+    }
+
+    .polaroid:not(.eliminated):not(.caught):hover {
+      transform: translateY(-4px) rotate(0deg) scale(1.02) !important;
+      box-shadow: 0 12px 22px rgba(53, 52, 48, 0.13);
+      z-index: 5;
+    }
+
+    .polaroid.selectable {
+      cursor: pointer;
+      border-color: var(--terracotta);
+      animation: softPulseTerracotta 1.7s infinite ease-in-out;
+    }
+
+    .polaroid.selectable-arrest {
+      cursor: pointer;
+      border-color: var(--sage);
+      animation: softPulseSage 1.4s infinite ease-in-out;
+    }
+
+    .polaroid.eliminated {
+      opacity: 0.68;
+      filter: saturate(0.45);
+    }
+
+    .polaroid.caught {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 4px rgba(125, 163, 139, 0.35), 0 12px 24px rgba(53, 52, 48, 0.14);
+      transform: rotate(0deg) scale(1.03) !important;
+      z-index: 6;
+    }
+
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22), inset 2px 2px 3px rgba(255, 255, 255, 0.55);
+      z-index: 8;
+    }
+
+    .tape-strip {
+      width: 48px;
+      height: 14px;
+      border-radius: 3px;
+      position: absolute;
+      top: -7px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-3deg);
+      opacity: 0.85;
+      z-index: 8;
+    }
+
+    /* Clean #ffffff Square Polaroid Photo Container for all 6 PNG Animals */
+    .photo-frame {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 11px;
+      background-color: #ffffff;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(53, 52, 48, 0.12);
+      padding: 6px;
+    }
+
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+    }
+
+    .svg-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .suspect-name {
+      margin-top: 9px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    /* Stamps */
+    .stamp-innocent {
+      position: absolute;
+      top: 43%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-14deg);
+      padding: 3px 10px;
+      border-radius: 8px;
+      border: 3px solid var(--terracotta);
+      background: rgba(255, 253, 249, 0.94);
+      color: var(--terracotta-dark);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      box-shadow: 0 3px 8px rgba(217, 138, 108, 0.25);
+      animation: stampSlam 0.34s cubic-bezier(0.22, 1.3, 0.36, 1) forwards;
+      z-index: 10;
+    }
+
+    .stamp-caught {
+      position: absolute;
+      top: 43%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-10deg);
+      padding: 4px 12px;
+      border-radius: 9px;
+      border: 3px solid var(--sage-dark);
+      background: var(--sage);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      box-shadow: 0 5px 12px rgba(94, 131, 108, 0.38);
+      animation: stampSlam 0.38s cubic-bezier(0.22, 1.3, 0.36, 1) forwards;
+      z-index: 10;
+    }
+
+    /* ==========================================================================
+       4. RIGHT COLUMN: CASE FILE PANEL
+       ========================================================================== */
+    .folder-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .folder-tab {
+      align-self: flex-start;
+      margin-left: 18px;
+      background: #f3e7cf;
+      border: 2px solid var(--board-border);
+      border-bottom: none;
+      border-radius: 14px 14px 0 0;
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: -2px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .folder-tab-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--sage);
+    }
+
+    .case-folder {
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-soft), 0 4px 0 var(--board-border);
+      padding: 20px;
+      min-height: 445px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    @media (min-width: 640px) {
+      .case-folder {
+        padding: 26px;
+      }
+    }
+
+    /* Tactile Buttons */
+    .btn-sage {
+      background: var(--sage);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      min-height: 46px;
+      padding: 11px 24px;
+      border-radius: 15px;
+      box-shadow: 0 4px 0 var(--sage-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+    }
+
+    .btn-sage:hover:not(:disabled) {
+      background: #71977f;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 var(--sage-dark);
+    }
+
+    .btn-sage:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--sage-dark);
+    }
+
+    .btn-sage:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-height: 44px;
+      padding: 9px 18px;
+      border-radius: 14px;
+      transition: background-color 0.15s ease, transform 0.12s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-beige);
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    @media (min-width: 520px) {
+      .choice-grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .btn-option {
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      box-shadow: 0 3px 0 var(--board-border);
+      border-radius: 15px;
+      min-height: 48px;
+      padding: 11px 16px;
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--text-main);
+      transition: all 0.14s ease;
+    }
+
+    .btn-option:hover {
+      background: var(--sky-light);
+      border-color: var(--sky);
+      box-shadow: 0 4px 0 var(--sky-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-option:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--sky-dark);
+    }
+
+    /* Word Tile Builder */
+    .answer-strip {
+      background: var(--bg-beige);
+      border: 2px dashed var(--sage);
+      border-radius: var(--radius-lg);
+      min-height: 68px;
+      padding: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .word-bank {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .tile-btn {
+      background: var(--sky-light);
+      border: 2px solid var(--sky);
+      box-shadow: 0 3px 0 var(--sky-dark);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 8px 15px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .tile-btn:hover {
+      transform: translateY(-2px);
+      background: #dcebf5;
+    }
+
+    .tile-btn.placed {
+      background: var(--sage-light);
+      border-color: var(--sage);
+      box-shadow: 0 3px 0 var(--sage-dark);
+    }
+
+    .tile-btn.used {
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* Sentence Prompt, Grammar Tip & Clue Box */
+    .sentence-card {
+      background: var(--bg-beige);
+      border: 2px solid var(--board-border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      text-align: center;
+      font-size: 1.16rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .blank-slot {
+      display: inline-block;
+      min-width: 90px;
+      padding: 2px 10px;
+      margin: 0 4px;
+      border-radius: 10px;
+      background: var(--surface-cream);
+      border: 2px dashed var(--terracotta);
+      color: var(--terracotta-dark);
+    }
+
+    .grammar-hint-box {
+      background: var(--terracotta-light);
+      border: 2px solid rgba(217, 138, 108, 0.55);
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #6b2d20;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-top: 8px;
+      animation: popIn 0.25s ease;
+    }
+
+    .clue-box {
+      background: var(--sky-light);
+      border: 2px solid var(--sky);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .clue-box-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .clue-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--sky-dark);
+    }
+
+    .btn-translate {
+      min-height: 36px;
+      padding: 5px 12px;
+      border-radius: 11px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      border: 2px solid var(--sky);
+      background: var(--surface-cream);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-translate:hover {
+      background: #dcebf5;
+    }
+
+    .btn-translate.active {
+      background: var(--sky);
+      border-color: var(--sky-dark);
+      color: #fff;
+    }
+
+    .translation-panel {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 2px dashed rgba(123, 164, 190, 0.55);
+      animation: popIn 0.22s ease;
+    }
+
+    .translation-text {
+      background: rgba(255, 253, 249, 0.94);
+      border: 1.5px solid rgba(123, 164, 190, 0.45);
+      border-radius: 12px;
+      padding: 10px 13px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Final Detective Report */
+    .solved-hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .solved-culprit-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .culprit-thumb {
+      width: 68px;
+      height: 68px;
+      border-radius: 16px;
+      background-color: #ffffff;
+      border: 2px solid var(--sage);
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .culprit-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--gold-light);
+      border: 1.5px solid var(--gold);
+      color: #7c5812;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .report-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .report-item {
+      background: var(--bg-beige);
+      border: 2px solid var(--board-border);
+      border-radius: 14px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+    }
+
+    .report-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--sage);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ==========================================================================
+       5. DETECTIVE NOTEBOOK MODAL
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(53, 52, 48, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .modal-card {
+      background: var(--surface-cream);
+      border: 2px solid var(--board-border);
+      border-radius: var(--radius-xl);
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.2);
+      animation: popIn 0.25s ease;
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      border-bottom: 2px dashed var(--board-border);
+    }
+
+    .btn-close {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--terracotta-light);
+      color: var(--terracotta-dark);
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .freq-list {
+      background: var(--bg-beige);
+      border: 1.5px solid var(--board-border);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .freq-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .freq-word {
+      width: 86px;
+    }
+
+    .freq-bar-bg {
+      flex: 1;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--surface-cream);
+      border: 1.5px solid var(--board-border);
+      overflow: hidden;
+    }
+
+    .freq-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 580px) {
+      .rules-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .rule-card {
+      border-radius: var(--radius-lg);
+      padding: 13px 15px;
+      font-size: 0.88rem;
+    }
+
+    .rule-example {
+      margin-top: 7px;
+      background: var(--surface-cream);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       6. PURE CSS/DOM CONFETTI & KEYFRAME ANIMATIONS
+       ========================================================================== */
+    #confetti-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 60;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -20px;
+      border-radius: 3px;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(105vh) rotate(540deg);
+        opacity: 0.85;
+      }
+    }
+
+    @keyframes stampSlam {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.2) rotate(-24deg);
+      }
+      70% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.94) rotate(-12deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(-14deg);
+      }
+    }
+
+    @keyframes softPulseTerracotta {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(217, 138, 108, 0.45), var(--shadow-card);
+      }
+      50% {
+        box-shadow: 0 0 0 7px rgba(217, 138, 108, 0.14), var(--shadow-card);
+      }
+    }
+
+    @keyframes softPulseSage {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(125, 163, 139, 0.55), var(--shadow-card);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(125, 163, 139, 0.16), var(--shadow-card);
+      }
+    }
+
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px) rotate(-1.5deg); }
+      40% { transform: translateX(7px) rotate(1.5deg); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    .shake {
+      animation: shakeCard 0.4s ease-in-out;
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .pop-in {
+      animation: popIn 0.28s ease forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Pastel Confetti Container -->
+  <div id="confetti-layer" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <!-- ======================================================================
+         TOP HEADER BAR
+         ====================================================================== -->
+    <header class="top-header">
+      <div class="brand-box">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+            <circle cx="17" cy="17" r="10.5" fill="#e9f2f7" stroke="#d98a6c" stroke-width="3.5" />
+            <path d="M13 13.5C14.2 11.8 16.5 11.2 18.5 11.8" stroke="#fffdf9" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M25 25L34 34" stroke="#7da38b" stroke-width="5" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Who Ate the Zoo Director's Lunch?</h1>
+          <p class="brand-subtitle">Solve grammar clues and find the hungry thief!</p>
+        </div>
+      </div>
+
+      <!-- Progress Pills (Clues 1-5 + Final Arrest Star) -->
+      <div id="progress-strip" class="progress-strip" aria-label="Investigation progress"></div>
+
+      <!-- Top Header Controls -->
+      <div class="header-actions">
+        <button id="btn-notebook" type="button" class="hdr-btn hdr-btn-notebook">
+          <span>📓</span>
+          <span>Detective Notebook</span>
+        </button>
+        <button id="btn-sound" type="button" class="hdr-btn">
+          <span id="sound-text">Sound: ON</span>
+        </button>
+        <button id="btn-restart" type="button" class="hdr-btn">
+          <span>↺</span>
+          <span>Restart</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         TWO-COLUMN WORKSPACE
+         ====================================================================== -->
+    <main class="workspace">
+      <!-- LEFT COLUMN: SUSPECT BOARD -->
+      <section class="suspects-panel">
+        <div class="board-header">
+          <div>
+            <h2 class="board-title">
+              <span class="board-dot"></span>
+              <span>Suspect Board</span>
+            </h2>
+            <p class="board-subtitle">Click an innocent suspect on the board after unlocking a clue</p>
+          </div>
+          <span id="board-count-pill" class="status-pill">6 Suspects Left</span>
+        </div>
+
+        <!-- Gentle Wrong-Suspect Hint Banner -->
+        <div id="board-feedback" class="board-feedback hidden" role="status">
+          <span>🔎</span>
+          <span id="board-feedback-text">Not this suspect! Re-read the clue carefully — who is innocent?</span>
+        </div>
+
+        <!-- 6 Square Polaroid Cards (Shuffled via Fisher-Yates) -->
+        <div id="suspects-grid" class="suspects-grid"></div>
+      </section>
+
+      <!-- RIGHT COLUMN: CASE FILE PANEL -->
+      <section class="folder-wrapper">
+        <div class="folder-tab">
+          <span class="folder-tab-dot"></span>
+          <span id="folder-tab-text">CASE FILE #001 • ZOO LUNCH MYSTERY</span>
+        </div>
+        <div id="case-folder" class="case-folder"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ======================================================================
+       DETECTIVE NOTEBOOK MODAL (A1 Grammar Cheat Sheet)
+       ====================================================================== -->
+  <div id="notebook-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="notebook-title">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <h2 id="notebook-title" style="font-size: 1.35rem; font-weight: 800;">📓 Detective Notebook</h2>
+          <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+            Present Simple &amp; Adverbs of Frequency Cheat Sheet
+          </p>
+        </div>
+        <button id="btn-close-notebook" type="button" class="btn-close" aria-label="Close Detective Notebook">✕</button>
+      </div>
+
+      <h3 style="font-size: 0.98rem; font-weight: 800; margin-bottom: 8px;">1. How often? (Adverbs of Frequency)</h3>
+      <div class="freq-list">
+        <div class="freq-row">
+          <span class="freq-word">always</span>
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width: 100%; background: var(--sage);"></div></div>
+          <span style="width: 44px; text-align: right; color: var(--sage-dark);">100%</span>
+        </div>
+        <div class="freq-row">
+          <span class="freq-word">usually</span>
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width: 80%; background: #93b59f;"></div></div>
+          <span style="width: 44px; text-align: right; color: var(--sage-dark);">80%</span>
+        </div>
+        <div class="freq-row">
+          <span class="freq-word">often</span>
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width: 60%; background: var(--sky);"></div></div>
+          <span style="width: 44px; text-align: right; color: var(--sky-dark);">60%</span>
+        </div>
+        <div class="freq-row">
+          <span class="freq-word">sometimes</span>
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width: 40%; background: #e3a288;"></div></div>
+          <span style="width: 44px; text-align: right; color: var(--terracotta-dark);">40%</span>
+        </div>
+        <div class="freq-row">
+          <span class="freq-word">never</span>
+          <div class="freq-bar-bg"><div class="freq-bar-fill" style="width: 6%; background: var(--terracotta);"></div></div>
+          <span style="width: 44px; text-align: right; color: var(--terracotta-dark);">0%</span>
+        </div>
+      </div>
+
+      <h3 style="font-size: 0.98rem; font-weight: 800; margin-bottom: 8px;">2. Present Simple Rules</h3>
+      <div class="rules-grid">
+        <div class="rule-card" style="background: var(--sage-light); border: 1.5px solid rgba(125,163,139,0.5);">
+          <div style="font-weight: 800; color: var(--sage-dark); margin-bottom: 4px;">Verb + -s / -es</div>
+          <p>With <strong>he / she / it</strong> (one animal), add <strong>-s</strong> or <strong>-es</strong> to the verb.</p>
+          <div class="rule-example">A hedgehog sleep<span style="color: var(--terracotta-dark);">s</span> during the day.</div>
+        </div>
+
+        <div class="rule-card" style="background: var(--gold-light); border: 1.5px solid rgba(229,185,92,0.6);">
+          <div style="font-weight: 800; color: #7c5812; margin-bottom: 4px;">to be + Adverb</div>
+          <p>Put <strong>usually / never</strong> <strong>AFTER</strong> <strong>am / is / are</strong>.</p>
+          <div class="rule-example">A hippo <u>is</u> <span style="color: var(--terracotta-dark);">never</span> small.</div>
+        </div>
+
+        <div class="rule-card" style="background: var(--sky-light); border: 1.5px solid rgba(123,164,190,0.6);">
+          <div style="font-weight: 800; color: var(--sky-dark); margin-bottom: 4px;">Adverb + Verb</div>
+          <p>Put <strong>usually / never</strong> <strong>BEFORE</strong> the main verb.</p>
+          <div class="rule-example">An armadillo <span style="color: var(--sky-dark);">usually</span> lives in dry places.</div>
+        </div>
+
+        <div class="rule-card" style="background: var(--terracotta-light); border: 1.5px solid rgba(217,138,108,0.5);">
+          <div style="font-weight: 800; color: var(--terracotta-dark); margin-bottom: 4px;">doesn't + Base Verb</div>
+          <p>With <strong>he / she / it</strong>, use <strong>doesn't</strong> + base verb (no -s).</p>
+          <div class="rule-example">A snake <span style="color: var(--terracotta-dark);">doesn't have</span> arms.</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 18px;">
+        <button id="btn-notebook-ok" type="button" class="btn-sage">Back to Case File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       GAME APPLICATION SCRIPT
+       ====================================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      /* ----------------------------------------------------------------------
+         A. WEB AUDIO API SOUND EFFECTS (Offline Synthesized Chimes & Stamps)
+         ---------------------------------------------------------------------- */
+      const SoundFX = (function () {
+        let enabled = true;
+        let ctx = null;
+
+        function getContext() {
+          if (!ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) ctx = new AudioCtx();
+          }
+          if (ctx && ctx.state === 'suspended') {
+            ctx.resume().catch(function () {});
+          }
+          return ctx;
+        }
+
+        function playTone(freq, duration, type, gainVal, delay) {
+          if (!enabled) return;
+          try {
+            const audioCtx = getContext();
+            if (!audioCtx) return;
+            const startTime = audioCtx.currentTime + (delay || 0);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+            gain.gain.setValueAtTime(gainVal || 0.08, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+          } catch (err) {
+            // Ignore audio playback errors if blocked by browser policy
+          }
+        }
+
+        return {
+          toggle: function () {
+            enabled = !enabled;
+            return enabled;
+          },
+          click: function () {
+            playTone(520, 0.07, 'sine', 0.06, 0);
+          },
+          correct: function () {
+            playTone(523.25, 0.13, 'triangle', 0.09, 0);
+            playTone(659.25, 0.18, 'triangle', 0.09, 0.1);
+          },
+          mistake: function () {
+            playTone(230, 0.16, 'sine', 0.07, 0);
+            playTone(195, 0.2, 'sine', 0.07, 0.11);
+          },
+          stamp: function () {
+            playTone(165, 0.14, 'triangle', 0.12, 0);
+            playTone(110, 0.18, 'sine', 0.12, 0.05);
+          },
+          win: function () {
+            playTone(523.25, 0.15, 'triangle', 0.09, 0);
+            playTone(659.25, 0.15, 'triangle', 0.09, 0.12);
+            playTone(783.99, 0.15, 'triangle', 0.09, 0.24);
+            playTone(1046.5, 0.35, 'triangle', 0.1, 0.36);
+          }
+        };
+      })();
+
+      /* ----------------------------------------------------------------------
+         B. 6 ANIMAL SUSPECTS (All PNGs on #ffffff + Inline SVG Fallbacks)
+         ---------------------------------------------------------------------- */
+      const SUSPECTS = [
+        {
+          id: 'armadillo',
+          name: 'Armadillo',
+          tilt: '-1.4deg',
+          pinType: 'pin',
+          pinColor: '#7DA38B',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<ellipse cx="60" cy="83" rx="44" ry="7" fill="#ebd3b4" opacity="0.7"/>' +
+            '<path d="M88 68 Q104 68 109 75" stroke="#b79272" stroke-width="6" stroke-linecap="round" fill="none"/>' +
+            '<ellipse cx="45" cy="79" rx="6" ry="4" fill="#a67e5e"/>' +
+            '<ellipse cx="75" cy="79" rx="6" ry="4" fill="#a67e5e"/>' +
+            '<path d="M34 72 C34 40, 88 38, 90 72 Z" fill="#c9a27e"/>' +
+            '<path d="M47 46 Q51 58 49 72" stroke="#9b7352" stroke-width="3" fill="none"/>' +
+            '<path d="M58 43 Q62 58 60 72" stroke="#9b7352" stroke-width="3" fill="none"/>' +
+            '<path d="M69 44 Q73 58 71 72" stroke="#9b7352" stroke-width="3" fill="none"/>' +
+            '<ellipse cx="37" cy="46" rx="4.5" ry="9" fill="#c9a27e" transform="rotate(-18 37 46)"/>' +
+            '<ellipse cx="37" cy="46" rx="2.2" ry="5.5" fill="#e9b8ac" transform="rotate(-18 37 46)"/>' +
+            '<path d="M42 54 C30 55, 16 64, 15 69 C16 74, 34 74, 44 71 Z" fill="#dec1a4"/>' +
+            '<circle cx="34" cy="62" r="2.5" fill="#353430"/>' +
+            '<circle cx="34.8" cy="61.2" r="0.9" fill="#fff"/>' +
+            '<circle cx="16" cy="69" r="2.5" fill="#5e4635"/>' +
+            '<path d="M23 70 Q28 73 32 70" stroke="#5e4635" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
+            '</svg>'
+        },
+        {
+          id: 'chameleon',
+          name: 'Chameleon',
+          tilt: '1.5deg',
+          pinType: 'tape',
+          pinColor: '#7BA4BE',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<path d="M12 76 Q60 71 108 78" stroke="#a68262" stroke-width="6" stroke-linecap="round" fill="none"/>' +
+            '<path d="M84 62 C98 62, 102 47, 92 44 C85 42, 83 51, 89 53" stroke="#76a684" stroke-width="6.5" stroke-linecap="round" fill="none"/>' +
+            '<path d="M46 66 L44 75 M72 66 L74 75" stroke="#6b9878" stroke-width="5" stroke-linecap="round"/>' +
+            '<path d="M36 62 C40 34, 82 34, 86 64 C74 70, 48 70, 36 62 Z" fill="#88b996"/>' +
+            '<path d="M54 41 Q58 53 55 66" stroke="#a7d4b4" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+            '<path d="M67 42 Q71 53 68 65" stroke="#7ba4be" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+            '<path d="M44 46 C44 31, 32 29, 28 38 C22 44, 18 54, 24 62 C31 66, 42 64, 46 58 Z" fill="#88b996"/>' +
+            '<circle cx="33" cy="49" r="7.5" fill="#b8dfc3" stroke="#6b9878" stroke-width="1.5"/>' +
+            '<circle cx="32.5" cy="49" r="3.2" fill="#353430"/>' +
+            '<circle cx="33.5" cy="48" r="1" fill="#fff"/>' +
+            '<path d="M21 57 Q27 61 33 58" stroke="#353430" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+            '</svg>'
+        },
+        {
+          id: 'hedgehog',
+          name: 'Hedgehog',
+          tilt: '-1.7deg',
+          pinType: 'pin',
+          pinColor: '#D98A6C',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<ellipse cx="60" cy="83" rx="40" ry="7" fill="#c8dbc9" opacity="0.7"/>' +
+            '<path d="M28 72 L21 58 L31 55 L26 42 L39 44 L38 30 L51 36 L55 24 L66 34 L75 26 L79 39 L92 36 L88 49 L99 53 L91 64 L96 73 Z" fill="#7e6556" stroke="#664f41" stroke-width="2" stroke-linejoin="round"/>' +
+            '<ellipse cx="46" cy="79" rx="5.5" ry="3.5" fill="#d5a68c"/>' +
+            '<ellipse cx="74" cy="79" rx="5.5" ry="3.5" fill="#d5a68c"/>' +
+            '<ellipse cx="60" cy="63" rx="25" ry="18" fill="#f3dfc8"/>' +
+            '<circle cx="42" cy="49" r="5" fill="#e5c8ab"/>' +
+            '<circle cx="78" cy="49" r="5" fill="#e5c8ab"/>' +
+            '<circle cx="51" cy="59" r="2.7" fill="#353430"/>' +
+            '<circle cx="69" cy="59" r="2.7" fill="#353430"/>' +
+            '<circle cx="51.8" cy="58.2" r="0.9" fill="#fff"/>' +
+            '<circle cx="69.8" cy="58.2" r="0.9" fill="#fff"/>' +
+            '<ellipse cx="60" cy="64.5" rx="3.4" ry="2.4" fill="#353430"/>' +
+            '<path d="M55 69 Q60 72.5 65 69" stroke="#353430" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+            '<circle cx="45" cy="64" r="3" fill="#d98a6c" opacity="0.35"/>' +
+            '<circle cx="75" cy="64" r="3" fill="#d98a6c" opacity="0.35"/>' +
+            '</svg>'
+        },
+        {
+          id: 'hippo',
+          name: 'Hippo',
+          tilt: '1.3deg',
+          pinType: 'tape',
+          pinColor: '#E5B95C',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<ellipse cx="60" cy="84" rx="44" ry="8" fill="#c7d5ec" opacity="0.6"/>' +
+            '<ellipse cx="60" cy="64" rx="32" ry="22" fill="#9e97b5"/>' +
+            '<ellipse cx="42" cy="81" rx="7" ry="5" fill="#8780a0"/>' +
+            '<ellipse cx="78" cy="81" rx="7" ry="5" fill="#8780a0"/>' +
+            '<circle cx="42" cy="30" r="6" fill="#9e97b5"/>' +
+            '<circle cx="42" cy="30" r="3" fill="#e3b5b5"/>' +
+            '<circle cx="78" cy="30" r="6" fill="#9e97b5"/>' +
+            '<circle cx="78" cy="30" r="3" fill="#e3b5b5"/>' +
+            '<circle cx="60" cy="46" r="21" fill="#aca5c4"/>' +
+            '<circle cx="51" cy="41" r="2.6" fill="#353430"/>' +
+            '<circle cx="69" cy="41" r="2.6" fill="#353430"/>' +
+            '<circle cx="51.8" cy="40.2" r="0.9" fill="#fff"/>' +
+            '<circle cx="69.8" cy="40.2" r="0.9" fill="#fff"/>' +
+            '<ellipse cx="60" cy="56" rx="22" ry="13" fill="#c4bdd9"/>' +
+            '<ellipse cx="51" cy="53" rx="2.5" ry="1.8" fill="#6f6887"/>' +
+            '<ellipse cx="69" cy="53" rx="2.5" ry="1.8" fill="#6f6887"/>' +
+            '<path d="M50 61 Q60 66 70 61" stroke="#6f6887" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+            '<rect x="52" y="61" width="4" height="4.5" rx="1.5" fill="#fffdf9"/>' +
+            '<rect x="64" y="61" width="4" height="4.5" rx="1.5" fill="#fffdf9"/>' +
+            '</svg>'
+        },
+        {
+          id: 'octopus',
+          name: 'Octopus',
+          tilt: '-1.2deg',
+          pinType: 'pin',
+          pinColor: '#7BA4BE',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<path d="M42 60 C24 64, 18 76, 28 82 C34 85, 38 78, 34 74" stroke="#e08b73" stroke-width="7" stroke-linecap="round" fill="none"/>' +
+            '<path d="M50 64 C42 76, 38 86, 46 88 C51 89, 53 82, 50 78" stroke="#d98a6c" stroke-width="7" stroke-linecap="round" fill="none"/>' +
+            '<path d="M70 64 C78 76, 82 86, 74 88 C69 89, 67 82, 70 78" stroke="#d98a6c" stroke-width="7" stroke-linecap="round" fill="none"/>' +
+            '<path d="M78 60 C96 64, 102 76, 92 82 C86 85, 82 78, 86 74" stroke="#e08b73" stroke-width="7" stroke-linecap="round" fill="none"/>' +
+            '<ellipse cx="60" cy="45" rx="23" ry="22" fill="#e4937c"/>' +
+            '<circle cx="48" cy="32" r="3.5" fill="#d98a6c" opacity="0.55"/>' +
+            '<circle cx="72" cy="34" r="2.8" fill="#d98a6c" opacity="0.55"/>' +
+            '<circle cx="51" cy="48" r="3.3" fill="#353430"/>' +
+            '<circle cx="69" cy="48" r="3.3" fill="#353430"/>' +
+            '<circle cx="52.2" cy="46.8" r="1.1" fill="#fff"/>' +
+            '<circle cx="70.2" cy="46.8" r="1.1" fill="#fff"/>' +
+            '<path d="M55 54 Q60 58 65 54" stroke="#353430" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+            '</svg>'
+        },
+        {
+          id: 'snake',
+          name: 'Snake',
+          tilt: '1.6deg',
+          pinType: 'tape',
+          pinColor: '#7DA38B',
+          svg: '<svg viewBox="0 0 120 100" width="100%" height="100%" aria-hidden="true">' +
+            '<ellipse cx="60" cy="84" rx="40" ry="7" fill="#c8dfc2" opacity="0.7"/>' +
+            '<path d="M88 52 C98 46, 98 62, 86 68 C78 73, 84 82, 62 82 C36 82, 24 72, 34 62 C44 52, 74 58, 74 70 C74 78, 48 80, 48 64 C48 52, 54 44, 54 38" stroke="#6ca856" stroke-width="12" stroke-linecap="round" fill="none"/>' +
+            '<path d="M48 62 C48 52, 54 44, 54 40" stroke="#f4d97e" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+            '<ellipse cx="54" cy="34" rx="18" ry="14" fill="#76b85e"/>' +
+            '<circle cx="46" cy="31" r="4" fill="#353430"/>' +
+            '<circle cx="62" cy="31" r="4" fill="#353430"/>' +
+            '<circle cx="47.2" cy="29.8" r="1.4" fill="#fff"/>' +
+            '<circle cx="63.2" cy="29.8" r="1.4" fill="#fff"/>' +
+            '<circle cx="51" cy="36" r="1.2" fill="#353430"/>' +
+            '<circle cx="57" cy="36" r="1.2" fill="#353430"/>' +
+            '<path d="M47 40 Q54 44 61 40" stroke="#353430" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+            '<circle cx="38" cy="70" r="3" fill="#4d853b"/>' +
+            '<circle cx="76" cy="74" r="3" fill="#4d853b"/>' +
+            '</svg>'
+        }
+      ];
+
+      /* ----------------------------------------------------------------------
+         C. EXACT 5 ROUNDS (A1 English + Ukrainian Translations)
+         ---------------------------------------------------------------------- */
+      const ROUNDS = [
+        {
+          id: 1,
+          title: 'Round 1 — Security Camera',
+          icon: '📹',
+          grammarTag: 'Present Simple (-s)',
+          type: 'mcq',
+          prompt: 'Choose the correct verb to unlock the clue:',
+          sentenceBefore: 'A hedgehog usually',
+          sentenceAfter: 'during the day.',
+          options: ['sleep', 'sleeps', 'sleeping'],
+          correct: 'sleeps',
+          solvedSentence: 'A hedgehog usually <strong>sleeps</strong> during the day.',
+          errorHint: "With 'a hedgehog' (it), add -s to the verb in Present Simple!",
+          unlockedClue: 'A hedgehog usually sleeps during the day. The thief ran fast at 1:00 PM!',
+          unlockedClueUa: 'Їжак зазвичай спить вдень. А злодій швидко бігав о 13:00!',
+          innocentId: 'hedgehog'
+        },
+        {
+          id: 2,
+          title: 'Round 2 — Tiny Window',
+          icon: '🪟',
+          grammarTag: 'to be + Adverb',
+          type: 'order',
+          prompt: 'Click the word tiles to build the sentence:',
+          tiles: ['A', 'hippo', 'is', 'never', 'small.'],
+          correctOrder: ['A', 'hippo', 'is', 'never', 'small.'],
+          solvedSentence: 'A hippo <strong>is never</strong> small.',
+          errorHint: "Put 'never' AFTER 'is' (am / is / are + adverb)!",
+          unlockedClue: 'A hippo is never small. The thief climbed through a tiny window!',
+          unlockedClueUa: 'Бегемот ніколи не буває маленьким. Злодій проліз крізь крихітне вікно!',
+          innocentId: 'hippo'
+        },
+        {
+          id: 3,
+          title: 'Round 3 — Wet Desk',
+          icon: '💧',
+          grammarTag: 'Adverb + Verb',
+          type: 'sentence_mcq',
+          prompt: 'Which sentence is correct?',
+          options: [
+            'An armadillo usually lives in dry places.',
+            'An armadillo lives usually in dry places.',
+            'An armadillo usually live in dry places.'
+          ],
+          correct: 'An armadillo usually lives in dry places.',
+          solvedSentence: 'An armadillo <strong>usually lives</strong> in dry places.',
+          errorHint: "Put 'usually' BEFORE the main verb, and add -s to 'lives'!",
+          unlockedClue: 'An armadillo usually lives in dry places. We found wet water drops on the desk!',
+          unlockedClueUa: 'Броненосець зазвичай живе в сухих місцях. А на столі ми знайшли мокрі краплі води!',
+          innocentId: 'armadillo'
+        },
+        {
+          id: 4,
+          title: 'Round 4 — Locked Lunchbox',
+          icon: '🔒',
+          grammarTag: "doesn't + Base Verb",
+          type: 'mcq',
+          prompt: 'Choose the correct negative form:',
+          sentenceBefore: 'A snake',
+          sentenceAfter: 'arms.',
+          options: ["doesn't have", "don't have", "doesn't has"],
+          correct: "doesn't have",
+          solvedSentence: "A snake <strong>doesn't have</strong> arms.",
+          errorHint: "Use 'doesn't' + base verb 'have' (without -s)!",
+          unlockedClue: "A snake doesn't have arms. Choose the animal with no arms — someone opened a tight lock with hands!",
+          unlockedClueUa: 'У змії немає рук. Обери того, хто не має рук — адже хтось відкрив тугий замок руками!',
+          innocentId: 'snake'
+        },
+        {
+          id: 5,
+          title: 'Round 5 — Last Witness',
+          icon: '🥪',
+          grammarTag: 'Adverb + Verb (-s)',
+          type: 'order',
+          prompt: 'Click the word tiles to build the sentence:',
+          tiles: ['A', 'chameleon', 'never', 'eats', 'fish.'],
+          correctOrder: ['A', 'chameleon', 'never', 'eats', 'fish.'],
+          solvedSentence: 'A chameleon <strong>never eats</strong> fish.',
+          errorHint: 'Order: Subject + never + verb(-s) + object.',
+          unlockedClue: 'A chameleon never eats fish. Only the fish sandwich is missing!',
+          unlockedClueUa: 'Хамелеон ніколи не їсть рибу. А зник лише рибний сендвіч!',
+          innocentId: 'chameleon'
+        }
+      ];
+
+      /* ----------------------------------------------------------------------
+         D. GAME STATE & FISHER-YATES SHUFFLE
+         ---------------------------------------------------------------------- */
+      const state = {
+        screen: 'intro',        // 'intro' | 'grammar' | 'eliminate' | 'arrest' | 'solved'
+        roundIndex: 0,
+        shuffledSuspects: [],
+        eliminated: new Set(),
+        caughtId: null,
+        roundTiles: [],
+        placedTiles: [],
+        grammarHint: '',
+        showTranslation: false
+      };
+
+      function fisherYatesShuffle(items) {
+        const copy = items.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = copy[i];
+          copy[i] = copy[j];
+          copy[j] = temp;
+        }
+        return copy;
+      }
+
+      function shuffleTilesForRound(tiles) {
+        let shuffled = fisherYatesShuffle(tiles);
+        // Ensure the shuffled bank isn't already identical to the solved order
+        if (shuffled.length > 1 && shuffled.every(function (w, i) { return w === tiles[i]; })) {
+          const first = shuffled.shift();
+          shuffled.push(first);
+        }
+        return shuffled;
+      }
+
+      /* ----------------------------------------------------------------------
+         E. DOM REFERENCES
+         ---------------------------------------------------------------------- */
+      const progressStripEl = document.getElementById('progress-strip');
+      const suspectsGridEl = document.getElementById('suspects-grid');
+      const boardCountPillEl = document.getElementById('board-count-pill');
+      const boardFeedbackEl = document.getElementById('board-feedback');
+      const boardFeedbackTextEl = document.getElementById('board-feedback-text');
+      const folderTabTextEl = document.getElementById('folder-tab-text');
+      const caseFolderEl = document.getElementById('case-folder');
+      const confettiLayerEl = document.getElementById('confetti-layer');
+
+      const btnNotebook = document.getElementById('btn-notebook');
+      const btnSound = document.getElementById('btn-sound');
+      const soundTextEl = document.getElementById('sound-text');
+      const btnRestart = document.getElementById('btn-restart');
+
+      const notebookModalEl = document.getElementById('notebook-modal');
+      const btnCloseNotebook = document.getElementById('btn-close-notebook');
+      const btnNotebookOk = document.getElementById('btn-notebook-ok');
+
+      /* ----------------------------------------------------------------------
+         F. MULTI-STEP IMAGE LOADER FOR EACH ANIMAL ID
+            Step 0: Zoo Detective/${id}.png
+            Step 1: ./${id}.png
+            Step 2: Zoo Detective/${id}.jpg
+            Step 3: Inline SVG fallback
+         ---------------------------------------------------------------------- */
+      function bindSmartImageLoader(imgEl, animalId) {
+        imgEl.dataset.loadStep = '0';
+        imgEl.onerror = function () {
+          const step = Number(imgEl.dataset.loadStep || '0');
+          if (step === 0) {
+            imgEl.dataset.loadStep = '1';
+            imgEl.src = './' + animalId + '.png';
+          } else if (step === 1) {
+            imgEl.dataset.loadStep = '2';
+            imgEl.src = 'Zoo Detective/' + animalId + '.jpg';
+          } else {
+            imgEl.onerror = null;
+            imgEl.style.display = 'none';
+            const svgBox = imgEl.nextElementSibling;
+            if (svgBox) {
+              svgBox.classList.remove('hidden');
+            }
+          }
+        };
+        imgEl.src = 'Zoo Detective/' + animalId + '.png';
+      }
+
+      /* ----------------------------------------------------------------------
+         G. PASTEL CONFETTI ANIMATION
+         ---------------------------------------------------------------------- */
+      function triggerConfetti() {
+        confettiLayerEl.innerHTML = '';
+        const colors = ['#7DA38B', '#D98A6C', '#7BA4BE', '#E5B95C', '#B896C8'];
+        for (let i = 0; i < 65; i++) {
+          const piece = document.createElement('div');
+          piece.className = 'confetti-piece';
+          const size = 7 + Math.random() * 8;
+          piece.style.width = size + 'px';
+          piece.style.height = (size * 0.65) + 'px';
+          piece.style.left = (Math.random() * 100) + 'vw';
+          piece.style.backgroundColor = colors[i % colors.length];
+          piece.style.animationDuration = (2.1 + Math.random() * 1.9) + 's';
+          piece.style.animationDelay = (Math.random() * 0.45) + 's';
+          confettiLayerEl.appendChild(piece);
+        }
+        setTimeout(function () {
+          confettiLayerEl.innerHTML = '';
+        }, 4600);
+      }
+
+      /* ----------------------------------------------------------------------
+         H. RENDER FUNCTIONS
+         ---------------------------------------------------------------------- */
+      function renderProgress() {
+        let html = '';
+        const clearedCount = state.eliminated.size;
+
+        for (let i = 0; i < 5; i++) {
+          const isDone = i < clearedCount;
+          const isCurrent = (state.screen === 'grammar' || state.screen === 'eliminate') && i === state.roundIndex && !isDone;
+          const cls = isDone ? 'progress-dot done' : (isCurrent ? 'progress-dot active' : 'progress-dot');
+          html += '<div class="' + cls + '" title="Clue ' + (i + 1) + '">' + (isDone ? '✓' : (i + 1)) + '</div>';
+        }
+
+        const starCls = state.caughtId
+          ? 'progress-star won'
+          : (state.screen === 'arrest' ? 'progress-star ready' : 'progress-star');
+        html += '<div class="' + starCls + '" title="Final Arrest">★</div>';
+
+        progressStripEl.innerHTML = html;
+      }
+
+      function renderSuspectsBoard() {
+        const remaining = SUSPECTS.length - state.eliminated.size;
+        if (state.caughtId) {
+          boardCountPillEl.textContent = 'Case Solved!';
+          boardCountPillEl.className = 'status-pill closed';
+        } else {
+          boardCountPillEl.textContent = remaining + (remaining === 1 ? ' Suspect Left' : ' Suspects Left');
+          boardCountPillEl.className = 'status-pill';
+        }
+
+        const canEliminate = state.screen === 'eliminate';
+        const canArrest = state.screen === 'arrest';
+
+        suspectsGridEl.innerHTML = state.shuffledSuspects.map(function (suspect) {
+          const isEliminated = state.eliminated.has(suspect.id);
+          const isCaught = state.caughtId === suspect.id;
+          const isClickable = !isEliminated && !isCaught && (canEliminate || canArrest);
+
+          let cardClass = 'polaroid';
+          if (isEliminated) cardClass += ' eliminated';
+          else if (isCaught) cardClass += ' caught';
+          else if (canArrest) cardClass += ' selectable-arrest';
+          else if (canEliminate) cardClass += ' selectable';
+
+          const pinHtml = suspect.pinType === 'pin'
+            ? '<div class="pin-dot" style="background:' + suspect.pinColor + ';"></div>'
+            : '<div class="tape-strip" style="background:' + suspect.pinColor + ';"></div>';
+
+          const stampHtml = isEliminated
+            ? '<div class="stamp-innocent">INNOCENT</div>'
+            : (isCaught ? '<div class="stamp-caught">CAUGHT!</div>' : '');
+
+          return (
+            '<button type="button" class="' + cardClass + '" data-suspect-id="' + suspect.id + '" ' +
+              'style="transform: rotate(' + suspect.tilt + ');" ' +
+              (isClickable ? '' : 'tabindex="-1"') + '>' +
+              pinHtml +
+              '<div class="photo-frame">' +
+                '<img alt="' + suspect.name + '" draggable="false" />' +
+                '<div class="svg-fallback hidden">' + suspect.svg + '</div>' +
+              '</div>' +
+              '<div class="suspect-name">' + suspect.name + '</div>' +
+              stampHtml +
+            '</button>'
+          );
+        }).join('');
+
+        // Attach smart image loader and click events to each polaroid card
+        suspectsGridEl.querySelectorAll('[data-suspect-id]').forEach(function (cardEl) {
+          const suspectId = cardEl.getAttribute('data-suspect-id');
+          const imgEl = cardEl.querySelector('img');
+          if (imgEl) {
+            bindSmartImageLoader(imgEl, suspectId);
+          }
+          cardEl.addEventListener('click', function () {
+            onSuspectCardClick(suspectId, cardEl);
+          });
+        });
+      }
+
+      function showBoardFeedback(msg) {
+        boardFeedbackTextEl.textContent = msg;
+        boardFeedbackEl.classList.remove('hidden');
+      }
+
+      function hideBoardFeedback() {
+        boardFeedbackEl.classList.add('hidden');
+      }
+
+      function renderCaseFolder() {
+        hideBoardFeedback();
+
+        /* ---------------- SCREEN 1: INTRO ---------------- */
+        if (state.screen === 'intro') {
+          folderTabTextEl.textContent = 'CASE FILE #001 • ZOO LUNCH MYSTERY';
+          caseFolderEl.innerHTML =
+            '<div class="pop-in" style="text-align:center; margin:auto 0; padding:10px 0;">' +
+              '<div style="width:94px; height:94px; border-radius:24px; background:var(--terracotta-light); border:2px solid rgba(217,138,108,0.4); display:flex; align-items:center; justify-content:center; margin:0 auto 18px;">' +
+                '<svg width="66" height="66" viewBox="0 0 100 100" aria-hidden="true">' +
+                  '<rect x="16" y="34" width="68" height="46" rx="12" fill="#7BA4BE" stroke="#57829D" stroke-width="3"/>' +
+                  '<path d="M36 34 V26 C36 21, 64 21, 64 26 V34" stroke="#57829D" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+                  '<rect x="28" y="46" width="44" height="22" rx="7" fill="#FFFDF9"/>' +
+                  '<path d="M38 57 Q48 49 58 57 Q48 65 38 57 Z" fill="#D98A6C"/>' +
+                  '<polygon points="57,57 64,51 64,63" fill="#D98A6C"/>' +
+                  '<circle cx="80" cy="34" r="13" fill="#D98A6C"/>' +
+                  '<text x="80" y="39" text-anchor="middle" fill="#FFFDF9" font-size="16" font-weight="800">?</text>' +
+                '</svg>' +
+              '</div>' +
+              '<span style="display:inline-block; padding:4px 12px; border-radius:999px; background:var(--terracotta-light); color:var(--terracotta-dark); font-size:0.78rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:10px;">Urgent Zoo Mystery!</span>' +
+              '<h2 style="font-size:1.55rem; font-weight:800; margin-bottom:10px;">1:00 PM — Lunch is Missing!</h2>' +
+              '<p style="font-size:1rem; font-weight:600; color:var(--text-muted); max-width:420px; margin:0 auto 18px;">' +
+                'Someone ate the Zoo Director\'s yummy <strong>fish sandwich</strong>! ' +
+                'Solve <strong>5 grammar clues</strong> to find the innocent animals and catch the thief.' +
+              '</p>' +
+              '<div style="background:var(--bg-beige); border:1.5px solid var(--board-border); border-radius:14px; padding:12px 14px; max-width:420px; margin:0 auto 20px; text-align:left; font-size:0.88rem; font-weight:600; display:flex; align-items:center; gap:10px;">' +
+                '<span style="font-size:1.3rem;">💡</span>' +
+                '<span>Need help with Present Simple or <em>usually / never</em>? Click <strong>Detective Notebook</strong> at the top!</span>' +
+              '</div>' +
+              '<button id="btn-start-game" type="button" class="btn-sage">Start Investigation 🔍</button>' +
+            '</div>';
+
+          document.getElementById('btn-start-game').addEventListener('click', function () {
+            SoundFX.click();
+            startRound(0);
+          });
+          return;
+        }
+
+        /* ---------------- SCREEN 2: GRAMMAR TASK ---------------- */
+        if (state.screen === 'grammar') {
+          const round = ROUNDS[state.roundIndex];
+          folderTabTextEl.textContent = 'CLUE ' + round.id + ' OF 5 • GRAMMAR TASK';
+
+          let taskBodyHtml = '';
+
+          if (round.type === 'mcq') {
+            taskBodyHtml =
+              '<div class="sentence-card">' +
+                round.sentenceBefore +
+                '<span class="blank-slot">___</span>' +
+                round.sentenceAfter +
+              '</div>' +
+              '<div class="choice-grid cols-3">' +
+                round.options.map(function (opt) {
+                  return '<button type="button" class="btn-option" data-mcq-opt="' + opt + '">' + opt + '</button>';
+                }).join('') +
+              '</div>';
+          } else if (round.type === 'sentence_mcq') {
+            taskBodyHtml =
+              '<div class="choice-grid">' +
+                round.options.map(function (opt) {
+                  return '<button type="button" class="btn-option" style="text-align:left;" data-mcq-opt="' + opt + '">' + opt + '</button>';
+                }).join('') +
+              '</div>';
+          } else if (round.type === 'order') {
+            const answerHtml = state.placedTiles.length
+              ? state.placedTiles.map(function (tileIdx, slotIdx) {
+                  return '<button type="button" class="tile-btn placed" data-slot-idx="' + slotIdx + '">' + state.roundTiles[tileIdx] + '</button>';
+                }).join('')
+              : '<span style="font-size:0.88rem; font-weight:600; color:var(--text-muted);">Tap the blue word tiles below to build the sentence...</span>';
+
+            const bankHtml = state.roundTiles.map(function (word, idx) {
+              const usedClass = state.placedTiles.indexOf(idx) !== -1 ? ' used' : '';
+              return '<button type="button" class="tile-btn' + usedClass + '" data-tile-idx="' + idx + '">' + word + '</button>';
+            }).join('');
+
+            const isReady = state.placedTiles.length === state.roundTiles.length;
+            taskBodyHtml =
+              '<div class="answer-strip">' + answerHtml + '</div>' +
+              '<div class="word-bank">' + bankHtml + '</div>' +
+              '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:14px;">' +
+                '<button id="btn-clear-tiles" type="button" class="btn-secondary">Clear</button>' +
+                '<button id="btn-check-tiles" type="button" class="btn-sage"' + (isReady ? '' : ' disabled') + '>Check ✓</button>' +
+              '</div>';
+          }
+
+          const hintHtml = state.grammarHint
+            ? '<div class="grammar-hint-box" role="status"><span>🦉</span><span>' + state.grammarHint + '</span></div>'
+            : '';
+
+          caseFolderEl.innerHTML =
+            '<div class="pop-in">' +
+              '<div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px;">' +
+                '<div style="display:flex; align-items:center; gap:10px;">' +
+                  '<span style="width:40px; height:40px; border-radius:13px; background:var(--sky-light); border:1.5px solid var(--sky); display:flex; align-items:center; justify-content:center; font-size:1.25rem;">' + round.icon + '</span>' +
+                  '<h2 style="font-size:1.25rem; font-weight:800;">' + round.title + '</h2>' +
+                '</div>' +
+                '<span style="font-size:0.76rem; font-weight:800; padding:4px 11px; border-radius:999px; background:var(--sage-light); color:var(--sage-dark); border:1.5px solid rgba(125,163,139,0.45);">' + round.grammarTag + '</span>' +
+              '</div>' +
+              '<p style="font-size:0.96rem; font-weight:700; color:var(--text-muted); margin-bottom:12px;">' + round.prompt + '</p>' +
+              taskBodyHtml +
+              hintHtml +
+            '</div>' +
+            '<div style="margin-top:20px; padding-top:12px; border-top:1.5px solid var(--board-border); display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; color:var(--text-muted);">' +
+              '<span>Step 1 of 2: Solve grammar to unlock clue</span>' +
+              '<span>Unlimited retries</span>' +
+            '</div>';
+
+          bindGrammarTaskEvents(round);
+          return;
+        }
+
+        /* ---------------- SCREEN 3: CLUE UNLOCKED! ---------------- */
+        if (state.screen === 'eliminate') {
+          const round = ROUNDS[state.roundIndex];
+          folderTabTextEl.textContent = 'CLUE ' + round.id + ' OF 5 • CLUE UNLOCKED!';
+
+          caseFolderEl.innerHTML =
+            '<div class="pop-in" style="margin:auto 0;">' +
+              '<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">' +
+                '<span style="width:40px; height:40px; border-radius:13px; background:var(--sage-light); border:1.5px solid var(--sage); display:flex; align-items:center; justify-content:center; font-size:1.2rem;">✅</span>' +
+                '<div>' +
+                  '<div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--sage-dark);">Clue Unlocked!</div>' +
+                  '<h2 style="font-size:1.25rem; font-weight:800;">' + round.title + '</h2>' +
+                '</div>' +
+              '</div>' +
+
+              '<div style="background:var(--sage-light); border:2px solid rgba(125,163,139,0.5); border-radius:14px; padding:12px 15px; text-align:center; font-size:1.06rem; font-weight:700; margin-bottom:14px;">' +
+                round.solvedSentence +
+              '</div>' +
+
+              '<div class="clue-box">' +
+                '<div class="clue-box-top">' +
+                  '<span class="clue-label">' + round.icon + ' Evidence Clue</span>' +
+                  '<button id="btn-toggle-translation" type="button" class="btn-translate' + (state.showTranslation ? ' active' : '') + '">' +
+                    '<span>🇺🇦 Переклад</span>' +
+                  '</button>' +
+                '</div>' +
+                '<p style="font-size:1rem; font-weight:800; color:var(--text-main);">' + round.unlockedClue + '</p>' +
+                '<div class="translation-panel' + (state.showTranslation ? '' : ' hidden') + '">' +
+                  '<div class="translation-text">🇺🇦 ' + round.unlockedClueUa + '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div style="background:var(--terracotta-light); border:2px solid rgba(217,138,108,0.55); border-radius:14px; padding:11px 14px; font-size:0.92rem; font-weight:800; color:var(--terracotta-dark); display:flex; align-items:center; justify-content:center; gap:8px;">' +
+                '<span style="font-size:1.2rem;">👈</span>' +
+                '<span>Click the innocent suspect on the board!</span>' +
+              '</div>' +
+            '</div>' +
+            '<div style="margin-top:20px; padding-top:12px; border-top:1.5px solid var(--board-border); display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; color:var(--text-muted);">' +
+              '<span>Step 2 of 2: Stamp the innocent suspect</span>' +
+              '<span>Stamp: INNOCENT</span>' +
+            '</div>';
+
+          document.getElementById('btn-toggle-translation').addEventListener('click', function () {
+            SoundFX.click();
+            state.showTranslation = !state.showTranslation;
+            renderCaseFolder();
+          });
+          return;
+        }
+
+        /* ---------------- SCREEN 4: FINAL ARREST ---------------- */
+        if (state.screen === 'arrest') {
+          folderTabTextEl.textContent = 'FINAL ARREST • CATCH THE THIEF!';
+          caseFolderEl.innerHTML =
+            '<div class="pop-in" style="text-align:center; margin:auto 0; padding:14px 0;">' +
+              '<div style="width:78px; height:78px; border-radius:22px; background:var(--sage-light); border:2px solid var(--sage); display:flex; align-items:center; justify-content:center; font-size:2.3rem; margin:0 auto 14px;">🚨</div>' +
+              '<span style="display:inline-block; padding:4px 12px; border-radius:999px; background:var(--sage-light); color:var(--sage-dark); font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">All 5 Clues Solved!</span>' +
+              '<h2 style="font-size:1.5rem; font-weight:800; margin-bottom:10px;">Only one suspect is left!</h2>' +
+              '<p style="font-size:1.05rem; font-weight:700; color:var(--text-muted); max-width:410px; margin:0 auto 20px;">Only one suspect is left! Click the thief on the board to catch them!</p>' +
+              '<div style="display:inline-flex; align-items:center; gap:8px; background:var(--sage-light); border:2px solid var(--sage); border-radius:14px; padding:10px 16px; font-size:0.9rem; font-weight:800; color:var(--sage-dark);">' +
+                '<span style="font-size:1.2rem;">👈</span>' +
+                '<span>Click the last suspect on the Suspect Board!</span>' +
+              '</div>' +
+            '</div>';
+          return;
+        }
+
+        /* ---------------- SCREEN 5: CASE SOLVED! ---------------- */
+        if (state.screen === 'solved') {
+          folderTabTextEl.textContent = 'CASE SOLVED! • SUPER DETECTIVE';
+
+          caseFolderEl.innerHTML =
+            '<div class="pop-in">' +
+              '<div class="solved-hero">' +
+                '<div class="solved-culprit-row">' +
+                  '<div class="culprit-thumb" id="culprit-thumb-box">' +
+                    '<img alt="Octopus" draggable="false" />' +
+                    '<div class="svg-fallback hidden">' + SUSPECTS[4].svg + '</div>' +
+                  '</div>' +
+                  '<div>' +
+                    '<div class="badge-pill">🏅 Super Detective</div>' +
+                    '<h2 style="font-size:1.42rem; font-weight:800; line-height:1.2;">Final Detective Report (Read Aloud!)</h2>' +
+                    '<p style="font-size:0.86rem; font-weight:700; color:var(--sage-dark);">We caught the Octopus!</p>' +
+                  '</div>' +
+                '</div>' +
+                '<button id="btn-solved-translate" type="button" class="btn-translate' + (state.showTranslation ? ' active' : '') + '">' +
+                  '<span>🇺🇦 Переклад</span>' +
+                '</button>' +
+              '</div>' +
+
+              '<div style="background:var(--sky-light); border:1.5px solid var(--sky); border-radius:13px; padding:9px 13px; font-size:0.88rem; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px;">' +
+                '<span>🗣️</span>' +
+                '<span>Read these 3 sentences aloud to close the case:</span>' +
+              '</div>' +
+
+              '<div class="report-list">' +
+                '<div class="report-item">' +
+                  '<span class="report-num">1</span>' +
+                  '<div>' +
+                    '<div style="font-size:1rem; font-weight:800;">The <span style="color:var(--terracotta-dark);">octopus</span> is very smart and fast.</div>' +
+                    '<div class="' + (state.showTranslation ? '' : 'hidden') + '" style="font-size:0.86rem; font-weight:700; color:var(--text-muted); margin-top:3px;">🇺🇦 Восьминіг дуже розумний і швидкий.</div>' +
+                  '</div>' +
+                '</div>' +
+
+                '<div class="report-item">' +
+                  '<span class="report-num">2</span>' +
+                  '<div>' +
+                    '<div style="font-size:1rem; font-weight:800;">It <span style="color:var(--sky-dark);">usually</span> lives in water and has eight arms.</div>' +
+                    '<div class="' + (state.showTranslation ? '' : 'hidden') + '" style="font-size:0.86rem; font-weight:700; color:var(--text-muted); margin-top:3px;">🇺🇦 Він зазвичай живе у воді й має вісім щупалець.</div>' +
+                  '</div>' +
+                '</div>' +
+
+                '<div class="report-item">' +
+                  '<span class="report-num">3</span>' +
+                  '<div>' +
+                    '<div style="font-size:1rem; font-weight:800;">It <span style="color:var(--sage-dark);">often</span> eats fish, so it ate the director\'s lunch!</div>' +
+                    '<div class="' + (state.showTranslation ? '' : 'hidden') + '" style="font-size:0.86rem; font-weight:700; color:var(--text-muted); margin-top:3px;">🇺🇦 Він часто їсть рибу, тому він і з’їв обід директора!</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+
+              '<div style="text-align:center;">' +
+                '<button id="btn-play-again" type="button" class="btn-sage">Play Again ↺</button>' +
+              '</div>' +
+            '</div>';
+
+          // Bind smart image loader for Octopus thumbnail
+          const thumbImg = caseFolderEl.querySelector('#culprit-thumb-box img');
+          if (thumbImg) {
+            bindSmartImageLoader(thumbImg, 'octopus');
+          }
+
+          document.getElementById('btn-solved-translate').addEventListener('click', function () {
+            SoundFX.click();
+            state.showTranslation = !state.showTranslation;
+            renderCaseFolder();
+          });
+
+          document.getElementById('btn-play-again').addEventListener('click', function () {
+            SoundFX.click();
+            resetGame();
+          });
+          return;
+        }
+      }
+
+      function renderAll() {
+        renderProgress();
+        renderSuspectsBoard();
+        renderCaseFolder();
+      }
+
+      /* ----------------------------------------------------------------------
+         I. GRAMMAR & SUSPECT CLICK INTERACTIONS
+         ---------------------------------------------------------------------- */
+      function startRound(index) {
+        const round = ROUNDS[index];
+        state.roundIndex = index;
+        state.screen = 'grammar';
+        state.roundTiles = round.type === 'order' ? shuffleTilesForRound(round.tiles) : [];
+        state.placedTiles = [];
+        state.grammarHint = '';
+        state.showTranslation = false;
+        renderAll();
+      }
+
+      function bindGrammarTaskEvents(round) {
+        if (round.type === 'mcq' || round.type === 'sentence_mcq') {
+          caseFolderEl.querySelectorAll('[data-mcq-opt]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              const chosen = btn.getAttribute('data-mcq-opt');
+              if (chosen === round.correct) {
+                SoundFX.correct();
+                state.grammarHint = '';
+                state.screen = 'eliminate';
+                renderAll();
+              } else {
+                SoundFX.mistake();
+                btn.classList.add('shake');
+                state.grammarHint = round.errorHint;
+                setTimeout(renderCaseFolder, 260);
+              }
+            });
+          });
+        } else if (round.type === 'order') {
+          caseFolderEl.querySelectorAll('[data-tile-idx]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              SoundFX.click();
+              const idx = Number(btn.getAttribute('data-tile-idx'));
+              if (state.placedTiles.indexOf(idx) === -1) {
+                state.placedTiles.push(idx);
+                state.grammarHint = '';
+                renderCaseFolder();
+              }
+            });
+          });
+
+          caseFolderEl.querySelectorAll('[data-slot-idx]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              SoundFX.click();
+              const slotIdx = Number(btn.getAttribute('data-slot-idx'));
+              state.placedTiles.splice(slotIdx, 1);
+              state.grammarHint = '';
+              renderCaseFolder();
+            });
+          });
+
+          const btnClear = document.getElementById('btn-clear-tiles');
+          if (btnClear) {
+            btnClear.addEventListener('click', function () {
+              SoundFX.click();
+              state.placedTiles = [];
+              state.grammarHint = '';
+              renderCaseFolder();
+            });
+          }
+
+          const btnCheck = document.getElementById('btn-check-tiles');
+          if (btnCheck) {
+            btnCheck.addEventListener('click', function () {
+              const studentWords = state.placedTiles.map(function (i) { return state.roundTiles[i]; });
+              const isMatch = studentWords.every(function (w, i) { return w === round.correctOrder[i]; });
+              if (isMatch) {
+                SoundFX.correct();
+                state.grammarHint = '';
+                state.screen = 'eliminate';
+                renderAll();
+              } else {
+                SoundFX.mistake();
+                state.grammarHint = round.errorHint;
+                renderCaseFolder();
+              }
+            });
+          }
+        }
+      }
+
+      function onSuspectCardClick(suspectId, cardEl) {
+        if (state.eliminated.has(suspectId) || state.caughtId) return;
+
+        if (state.screen === 'eliminate') {
+          const round = ROUNDS[state.roundIndex];
+          if (suspectId === round.innocentId) {
+            SoundFX.stamp();
+            hideBoardFeedback();
+            state.eliminated.add(suspectId);
+
+            // Advance immediately to next round, or to Final Arrest after Round 5
+            if (state.roundIndex < ROUNDS.length - 1) {
+              startRound(state.roundIndex + 1);
+            } else {
+              state.screen = 'arrest';
+              renderAll();
+            }
+          } else {
+            SoundFX.mistake();
+            cardEl.classList.remove('shake');
+            void cardEl.offsetWidth;
+            cardEl.classList.add('shake');
+            showBoardFeedback('Not this suspect! Re-read the clue carefully — who is innocent?');
+          }
+          return;
+        }
+
+        if (state.screen === 'arrest') {
+          if (suspectId === 'octopus') {
+            SoundFX.stamp();
+            setTimeout(function () { SoundFX.win(); }, 200);
+            hideBoardFeedback();
+            state.caughtId = 'octopus';
+            state.showTranslation = false;
+            state.screen = 'solved';
+            triggerConfetti();
+            renderAll();
+          }
+          return;
+        }
+
+        if (state.screen === 'grammar') {
+          SoundFX.click();
+          showBoardFeedback('Solve the grammar task first to unlock the clue!');
+        }
+      }
+
+      function resetGame() {
+        state.screen = 'intro';
+        state.roundIndex = 0;
+        state.shuffledSuspects = fisherYatesShuffle(SUSPECTS);
+        state.eliminated = new Set();
+        state.caughtId = null;
+        state.roundTiles = [];
+        state.placedTiles = [];
+        state.grammarHint = '';
+        state.showTranslation = false;
+        confettiLayerEl.innerHTML = '';
+        renderAll();
+      }
+
+      /* ----------------------------------------------------------------------
+         J. HEADER & MODAL EVENT LISTENERS
+         ---------------------------------------------------------------------- */
+      function openNotebook() {
+        SoundFX.click();
+        notebookModalEl.classList.remove('hidden');
+      }
+
+      function closeNotebook() {
+        SoundFX.click();
+        notebookModalEl.classList.add('hidden');
+      }
+
+      btnNotebook.addEventListener('click', openNotebook);
+      btnCloseNotebook.addEventListener('click', closeNotebook);
+      btnNotebookOk.addEventListener('click', closeNotebook);
+      notebookModalEl.addEventListener('click', function (e) {
+        if (e.target === notebookModalEl) closeNotebook();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !notebookModalEl.classList.contains('hidden')) {
+          closeNotebook();
+        }
+      });
+
+      btnSound.addEventListener('click', function () {
+        const isOn = SoundFX.toggle();
+        soundTextEl.textContent = isOn ? 'Sound: ON' : 'Sound: OFF';
+        if (isOn) SoundFX.click();
+      });
+
+      btnRestart.addEventListener('click', function () {
+        SoundFX.click();
+        resetGame();
+      });
+
+      /* ----------------------------------------------------------------------
+         K. INITIALIZE GAME
+         ---------------------------------------------------------------------- */
+      resetGame();
+    });
+  </script>
+</body>
+</html>
